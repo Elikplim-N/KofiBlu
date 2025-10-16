@@ -20,14 +20,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BookUser, ChevronDown, Plus, Sparkles, Trash2 } from "lucide-react";
-import AiProfileSuggester from "./AiProfileSuggester";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 
 export default function ProfileManager() {
   const { profiles, saveProfile, loadProfile, deleteProfile } = useAppContext();
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [profileName, setProfileName] = useState("");
-  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
 
   const handleSave = () => {
     saveProfile(profileName);
@@ -69,9 +67,6 @@ export default function ProfileManager() {
         <Button size="icon" variant="outline" onClick={() => setIsSaveDialogOpen(true)} aria-label="Save Profile">
           <Plus className="h-4 w-4" />
         </Button>
-         <Button size="icon" variant="outline" onClick={() => setIsAiDialogOpen(true)} aria-label="Suggest Profiles">
-            <Sparkles className="h-4 w-4 text-primary" />
-        </Button>
       </div>
 
       <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
@@ -100,8 +95,6 @@ export default function ProfileManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      <AiProfileSuggester open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen} />
     </>
   );
 }

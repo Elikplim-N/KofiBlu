@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Terminal, Trash2 } from "lucide-react";
-import AiControlSuggester from "./AiControlSuggester";
 
 export default function SerialMonitor() {
   const { serialData, clearSerial } = useAppContext();
@@ -45,7 +44,6 @@ export default function SerialMonitor() {
             </ScrollArea>
         </div>
         <SheetFooter>
-            <AiControlSuggester />
             <Button variant="outline" onClick={clearSerial}>
                 <Trash2 className="mr-2 h-4 w-4" /> Clear Log
             </Button>
