@@ -47,10 +47,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !navigator.bluetooth) {
-      setIsBluetoothSupported(false);
+    // This effect runs only on the client side.
+    if (typeof window !== "undefined") {
+      if (!navigator.bluetooth) {
+        setIsBluetoothSupported(false);
+      }
     }
+  }, []);
 
+
+  useEffect(() => {
     try {
       const storedProfiles = localStorage.getItem(PROFILES_STORAGE_KEY);
       if (storedProfiles) {
