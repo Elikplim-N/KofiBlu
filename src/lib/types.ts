@@ -1,4 +1,4 @@
-export type ControlType = "button" | "slider" | "textInput";
+export type ControlType = "button" | "slider" | "textInput" | "switch";
 
 export interface ControlComponent {
   id: string;

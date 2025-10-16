@@ -159,6 +159,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (type === 'button') {
         (newControl as any).command = `BTN:${newControl.id}:1`;
     }
+    if (type === 'switch') {
+        (newControl as any).onCommand = `SW:${newControl.id}:1`;
+        (newControl as any).offCommand = `SW:${newControl.id}:0`;
+    }
+    if (type === 'slider') {
+      (newControl as any).orientation = 'horizontal';
+      (newControl as any).min = 0;
+      (newControl as any).max = 100;
+      (newControl as any).prefix = `SLD:${newControl.id}`;
+    }
     setControls(prev => [...prev, newControl]);
   };
 

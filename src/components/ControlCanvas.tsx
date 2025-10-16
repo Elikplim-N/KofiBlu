@@ -4,6 +4,7 @@ import { useAppContext } from "@/contexts/app-context";
 import ButtonControl from "./controls/ButtonControl";
 import SliderControl from "./controls/SliderControl";
 import InputControl from "./controls/InputControl";
+import SwitchControl from "./controls/SwitchControl";
 import { Dices } from "lucide-react";
 
 export default function ControlCanvas() {
@@ -29,6 +30,8 @@ export default function ControlCanvas() {
             return <SliderControl key={control.id} {...control} />;
           case "textInput":
             return <InputControl key={control.id} {...control} />;
+          case "switch":
+            return <SwitchControl key={control.id} {...control} />;
           default:
             return null;
         }

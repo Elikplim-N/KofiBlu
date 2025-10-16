@@ -2,12 +2,13 @@
 
 import { useAppContext } from "@/contexts/app-context";
 import { Button } from "@/components/ui/button";
-import { CaseSensitive, Pilcrow, SlidersHorizontal } from "lucide-react";
+import { CaseSensitive, Pilcrow, SlidersHorizontal, ToggleRight } from "lucide-react";
 
 const controlTypes = [
   { type: "button", label: "Button", icon: CaseSensitive },
   { type: "slider", label: "Slider", icon: SlidersHorizontal },
   { type: "textInput", label: "Text Input", icon: Pilcrow },
+  { type: "switch", label: "Switch", icon: ToggleRight },
 ];
 
 export default function ControlPalette() {
