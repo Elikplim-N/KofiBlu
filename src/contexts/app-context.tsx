@@ -6,6 +6,7 @@ import type { ControlComponent, ControlProfile, ControlType } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast";
 
 interface AppContextType {
+  isBluetoothSupported: boolean;
   isConnected: boolean;
   deviceName: string | null;
   connect: () => Promise<void>;
@@ -23,6 +24,8 @@ interface AppContextType {
   loadProfile: (name: string) => void;
   deleteProfile: (name: string) => void;
   getProfileNames: () => string[];
+  isEditMode: boolean;
+  setIsEditMode: (isEdit: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -31,6 +34,7 @@ const PROFILES_STORAGE_KEY = "kofiblu_profiles";
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [isBluetoothSupported, setIsBluetoothSupported] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [deviceName, setDeviceName] = useState<string | null>(null);
   const [device, setDevice] = useState<BluetoothDevice | null>(null);
@@ -40,8 +44,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [serialData, setSerialData] = useState<string[]>([]);
   const [controls, setControls] = useState<ControlComponent[]>([]);
   const [profiles, setProfiles] = useState<ControlProfile[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && !navigator.bluetooth) {
+      setIsBluetoothSupported(false);
+    }
+
     try {
       const storedProfiles = localStorage.getItem(PROFILES_STORAGE_KEY);
       if (storedProfiles) {
@@ -63,11 +72,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const connect = async () => {
-    if (!navigator.bluetooth) {
+    if (!isBluetoothSupported) {
       toast({
         variant: "destructive",
         title: "Web Bluetooth Not Supported",
-        description: "Your browser does not support the Web Bluetooth API.",
+        description: "Please use a compatible browser like Chrome or Edge.",
       });
       return;
     }
@@ -147,6 +156,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       type,
       label,
     };
+    if (type === 'button') {
+        (newControl as any).command = `BTN:${newControl.id}:1`;
+    }
     setControls(prev => [...prev, newControl]);
   };
 
@@ -190,6 +202,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getProfileNames = () => profiles.map(p => p.name);
 
   const value = {
+    isBluetoothSupported,
     isConnected,
     deviceName,
     connect,
@@ -207,6 +220,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loadProfile,
     deleteProfile,
     getProfileNames,
+    isEditMode,
+    setIsEditMode
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
