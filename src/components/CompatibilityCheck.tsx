@@ -1,13 +1,20 @@
 "use client";
 
-import { useAppContext } from "@/contexts/app-context";
+import { useState, useEffect } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
 export default function CompatibilityCheck() {
-  const { isBluetoothSupported } = useAppContext();
+  const [isSupported, setIsSupported] = useState(true);
 
-  if (isBluetoothSupported) {
+  useEffect(() => {
+    // This check runs only on the client side.
+    if (typeof window !== 'undefined' && !navigator.bluetooth) {
+      setIsSupported(false);
+    }
+  }, []);
+
+  if (isSupported) {
     return null;
   }
 

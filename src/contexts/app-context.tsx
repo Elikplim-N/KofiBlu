@@ -6,7 +6,6 @@ import type { ControlComponent, ControlProfile, ControlType } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast";
 
 interface AppContextType {
-  isBluetoothSupported: boolean;
   isConnected: boolean;
   deviceName: string | null;
   connect: () => Promise<void>;
@@ -34,7 +33,6 @@ const PROFILES_STORAGE_KEY = "kofiblu_profiles";
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const [isBluetoothSupported, setIsBluetoothSupported] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [deviceName, setDeviceName] = useState<string | null>(null);
   const [device, setDevice] = useState<BluetoothDevice | null>(null);
@@ -45,16 +43,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [controls, setControls] = useState<ControlComponent[]>([]);
   const [profiles, setProfiles] = useState<ControlProfile[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
-
-  useEffect(() => {
-    // This effect runs only on the client side.
-    if (typeof window !== "undefined") {
-      if (!navigator.bluetooth) {
-        setIsBluetoothSupported(false);
-      }
-    }
-  }, []);
-
 
   useEffect(() => {
     try {
@@ -78,7 +66,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const connect = async () => {
-    if (!isBluetoothSupported) {
+    if (typeof window === 'undefined' || !navigator.bluetooth) {
       toast({
         variant: "destructive",
         title: "Web Bluetooth Not Supported",
@@ -218,7 +206,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getProfileNames = () => profiles.map(p => p.name);
 
   const value = {
-    isBluetoothSupported,
     isConnected,
     deviceName,
     connect,
@@ -226,7 +213,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     serialData,
     sendSerial,
     clearSerial,
-    controls,
+  controls,
     addControl,
     removeControl,
     updateControl,
