@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ReactNode } from "react";
@@ -30,6 +31,14 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const PROFILES_STORAGE_KEY = "kofiblu_profiles";
+
+// Nordic UART Service
+const UART_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+// RX Characteristic (App -> Device)
+const RX_CHARACTERISTIC_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+// TX Characteristic (Device -> App)
+const TX_CHARACTERISTIC_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
@@ -64,6 +73,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSerialData(prev => [...prev, `<- ${text}`]);
     }
   }, []);
+  
+  const handleDisconnect = useCallback(() => {
+    setIsConnected(false);
+    setDeviceName(null);
+    setDevice(null);
+    setTxCharacteristic(null);
+    setRxCharacteristic(null);
+    toast({ title: "Device Disconnected" });
+  }, [toast]);
 
   const connect = async () => {
     if (typeof window === 'undefined' || !navigator.bluetooth) {
@@ -77,35 +95,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const bleDevice = await navigator.bluetooth.requestDevice({
         acceptAllDevices: true,
-        optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e'] // UART service
-      });
-      setDevice(bleDevice);
-      const server = await bleDevice.gatt?.connect();
-      if (!server) throw new Error("GATT server not found");
-      
-      bleDevice.addEventListener('gattserverdisconnected', () => {
-          setIsConnected(false);
-          setDeviceName(null);
-          setDevice(null);
-          toast({ title: "Device Disconnected" });
+        optionalServices: [UART_SERVICE_UUID]
       });
 
-      const service = await server.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
-      const rx = await service.getCharacteristic('6e400002-b5a3-f393-e0a9-e50e24dcca9e');
-      const tx = await service.getCharacteristic('6e400003-b5a3-f393-e0a9-e50e24dcca9e');
+      if (!bleDevice.gatt) {
+        throw new Error("GATT server not available on this device.");
+      }
       
-      setTxCharacteristic(tx);
+      setDevice(bleDevice);
+      bleDevice.addEventListener('gattserverdisconnected', handleDisconnect);
+      
+      const server = await bleDevice.gatt.connect();
+      
+      const service = await server.getPrimaryService(UART_SERVICE_UUID);
+      const rx = await service.getCharacteristic(RX_CHARACTERISTIC_UUID);
+      const tx = await service.getCharacteristic(TX_CHARACTERISTIC_UUID);
+      
       setRxCharacteristic(rx);
+      setTxCharacteristic(tx);
 
       await tx.startNotifications();
       tx.addEventListener('characteristicvaluechanged', handleNotifications);
 
       setIsConnected(true);
       setDeviceName(bleDevice.name || 'Unknown Device');
-      toast({ title: "Device Connected", description: bleDevice.name });
+      toast({ title: "Device Connected", description: `Successfully connected to ${bleDevice.name || 'Unknown Device'}` });
+
     } catch (error) {
       console.error("Bluetooth connection failed:", error);
       toast({ variant: "destructive", title: "Connection Failed", description: String(error) });
+      if (device) {
+        device.removeEventListener('gattserverdisconnected', handleDisconnect);
+        device.gatt?.disconnect();
+      }
+      handleDisconnect(); // Reset state
     }
   };
 
@@ -119,11 +142,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             console.error("Error stopping notifications:", error);
         }
       }
+      device.removeEventListener('gattserverdisconnected', handleDisconnect);
       device.gatt.disconnect();
     }
-    setIsConnected(false);
-    setDeviceName(null);
-    setDevice(null);
+    // State is reset by the handleDisconnect callback
   };
   
   const sendSerial = (data: string) => {
@@ -132,7 +154,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
     }
     const encoder = new TextEncoder();
-    rxCharacteristic.writeValue(encoder.encode(data))
+    // Append newline character as many BLE UART implementations expect it
+    const dataToSend = data + '\n';
+    rxCharacteristic.writeValue(encoder.encode(dataToSend))
       .then(() => {
         setSerialData(prev => [...prev, `-> ${data}`]);
       })
@@ -237,3 +261,5 @@ export function useAppContext() {
   }
   return context;
 }
+
+    
