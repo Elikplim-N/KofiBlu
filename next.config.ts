@@ -39,10 +39,6 @@ const nextConfig: NextConfig = {
             key: 'Permissions-Policy',
             value: 'bluetooth=*',
           },
-          {
-            key: 'Feature-Policy',
-            value: "bluetooth 'self'",
-          }
         ],
       },
     ];
